@@ -1,0 +1,16 @@
+(defmacro += (x y)
+	`(setf ,x (+ ,x ,y) )
+)
+
+
+(defmacro iterate (i beginV endV incrV &rest bodies)
+	(let ( (g (gensym)) (h (gensym)))
+		`(do ((,h ,endV) (,g ,beginV) (,i ,beginV) )
+			( (> ,i ,h) T)
+			,@bodies
+			(setf ,i (+ ,i ,incrV))
+		 )
+	)
+)
+	
+	

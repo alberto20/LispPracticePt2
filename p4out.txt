@@ -1,0 +1,3000 @@
+    indirectObj= CUSTOMER
+    QualIndirectPrep= NIL
+    QualIndirectObj= CUSTNR
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= 111
+T
+
+
+ ;;;
+ ;;;  Examples with NOT
+ ;;;
+ (processRequest '(Show title for movies with rating not equal to G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH RATING NOT EQUAL TO G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NOT
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ ;;;
+ ;;; Some invalid requests
+ ;;;
+ (processRequest '(Show title for videos with a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR VIDEOS WITH A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= NIL
+NIL
+
+ (processRequest '(Show title for movies having a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES HAVING A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= MOVIES
+NIL
+
+ (processRequest '(Show title for movies with a rating of G or PG))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH A RATING OF G OR PG)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+NIL
+
+
+ ;;; see if doing extra credit, return if not
+ (if (NOT(EQL doingExtra 'EC2))
+    (abort))
+Break 10 [13]> (load "p4Lisp.txt" :echo T :print T)
+;;        Loading file p4Lisp.txt ...
+
+;;;
+(defun checkRequest (parse)
+        (PROG (preposition)
+
+                ;;; 'verb check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'verb)
+                        (putp 'verb parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'directObj parse preposition)
+                        (return NIL))
+
+                ;;; 'prep check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'indirectObj parse preposition)
+                        (return NIL))
+
+                ;;; return true if end of first form
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                (if (isa preposition 'noun)
+                        (putp 'qualindirectObj parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+
+                (cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'comparator parse preposition)))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'qualprep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (putp 'qualValue parse preposition)
+
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+        )
+
+)
+CHECKREQUEST
+
+
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+        (dolist (word partOfSpeech)
+                (putp word parse NIL)
+        )
+)
+RESETPARTSOFSPEECH
+
+
+(defmacro set_isa (partOfSpeech &rest words)
+        (dolist (word words)
+                (putp word word-dict partOfSpeech)
+        )
+)
+SET_ISA
+
+
+(defun isa (word partOfSpeech)
+        (setf words (getp word word-dict))
+        (if (eql words partOfSpeech) T NIL)
+)
+ISA
+
+;;        Loaded file p4Lisp.txt
+T
+Break 10 [13]> (load "p4LispRun.txt" :echo T :print T)
+;;        Loading file p4LispRun.txt ...
+;;; p4LispRun.txt - run the student's code
+;;; Use set_isa to set the part of speech for each of the words.
+(set_isa article a an the)
+NIL
+
+(set_isa noun movies movie rentals rental customer customers)
+NIL
+
+(set_isa noun ID title genre rating custNr name state date number gender)
+NIL
+
+(set_isa verb count select show print)
+NIL
+
+(set_isa prep of with to in for)
+NIL
+
+(set_isa comparator equal after before)
+NIL
+
+(set_isa adjective horror scifi romance comedy action male female g pg pg13 r x )
+NIL
+
+
+(putp 'movie table-ht 'movie)
+MOVIE
+
+(putp 'movies table-ht 'movie)
+MOVIE
+
+(putp 'rental table-ht 'rental)
+RENTAL
+
+(putp 'rentals table-ht 'rental)
+RENTAL
+
+(putp 'customer table-ht 'customer)
+CUSTOMER
+
+(putp 'customers table-ht 'customer)
+CUSTOMER
+
+
+ ;;;
+ ;;; first form:  verb [article] directObj prep [article] indirectObj
+ ;;;
+ (processRequest '(count the number of rentals ))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= RENTALS
+T
+
+
+ (processRequest '(count the number of movies ))
+ ******************************************************************
+  (COUNT THE NUMBER OF MOVIES)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= MOVIES
+T
+
+
+ (processRequest '(show ID for movies ))
+ ******************************************************************
+  (SHOW ID FOR MOVIES)
+    checkRequest returned T
+    verb= SHOW
+    directObj= ID
+    prep= FOR
+    indirectObj= MOVIES
+T
+
+
+ ;;;
+ ;;; second form: verb [article] directObj prep [article] indirectObj
+ ;;;                   prep [article] qualIndirectObj comparator [prep] qualValue
+ ;;;
+ (processRequest '(show the title of movies with rating equal to PG13))
+ ******************************************************************
+  (SHOW THE TITLE OF MOVIES WITH RATING EQUAL TO PG13)
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= PG13
+T
+
+
+ (processRequest '(Count the number of rentals with date after 2018-10-01))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS WITH DATE AFTER 2018-10-01)
+    checkRequest returned NIL
+    verb= COUNT
+    directObj= NUMBER
+    prep= WITH
+    indirectObj= RENTALS
+    QualIndirectPrep= NIL
+    QualIndirectObj= DATE
+    Comparator= AFTER
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ (processRequest '(Show the title for the movie with ID equal to HP001))
+ ******************************************************************
+  (SHOW THE TITLE FOR THE MOVIE WITH ID EQUAL TO HP001)
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIE
+    QualIndirectPrep= NIL
+    QualIndirectObj= ID
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= HP001
+T
+
+
+ (processRequest '(Select the name of the customer with custNr equal to 111))
+ ******************************************************************
+  (SELECT THE NAME OF THE CUSTOMER WITH CUSTNR EQUAL TO 111)
+    checkRequest returned T
+    verb= SELECT
+    directObj= NAME
+    prep= WITH
+    indirectObj= CUSTOMER
+    QualIndirectPrep= NIL
+    QualIndirectObj= CUSTNR
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= 111
+T
+
+
+ ;;;
+ ;;;  Examples with NOT
+ ;;;
+ (processRequest '(Show title for movies with rating not equal to G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH RATING NOT EQUAL TO G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NOT
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ ;;;
+ ;;; Some invalid requests
+ ;;;
+ (processRequest '(Show title for videos with a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR VIDEOS WITH A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= NIL
+NIL
+
+ (processRequest '(Show title for movies having a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES HAVING A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= MOVIES
+NIL
+
+ (processRequest '(Show title for movies with a rating of G or PG))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH A RATING OF G OR PG)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+NIL
+
+
+ ;;; see if doing extra credit, return if not
+ (if (NOT(EQL doingExtra 'EC2))
+    (abort))
+Break 10 [13]> (load "p4Lisp.txt" :echo T :print T)
+;;        Loading file p4Lisp.txt ...
+
+;;;
+(defun checkRequest (parse)
+        (PROG (preposition)
+
+                ;;; 'verb check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'verb)
+                        (putp 'verb parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'directObj parse preposition)
+                        (return NIL))
+
+                ;;; 'prep check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'indirectObj parse preposition)
+                        (return NIL))
+
+                ;;; return true if end of first form
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                (if (isa preposition 'noun)
+                        (putp 'qualindirectObj parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+
+                (cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'comparator parse preposition)))
+                (print preposition)
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'qualprep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (putp 'qualValue parse preposition)
+
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+        )
+
+)
+CHECKREQUEST
+
+
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+        (dolist (word partOfSpeech)
+                (putp word parse NIL)
+        )
+)
+RESETPARTSOFSPEECH
+
+
+(defmacro set_isa (partOfSpeech &rest words)
+        (dolist (word words)
+                (putp word word-dict partOfSpeech)
+        )
+)
+SET_ISA
+
+
+(defun isa (word partOfSpeech)
+        (setf words (getp word word-dict))
+        (if (eql words partOfSpeech) T NIL)
+)
+ISA
+
+;;        Loaded file p4Lisp.txt
+T
+Break 10 [13]> (load "p4LispRun.txt" :echo T :print T)
+;;        Loading file p4LispRun.txt ...
+;;; p4LispRun.txt - run the student's code
+;;; Use set_isa to set the part of speech for each of the words.
+(set_isa article a an the)
+NIL
+
+(set_isa noun movies movie rentals rental customer customers)
+NIL
+
+(set_isa noun ID title genre rating custNr name state date number gender)
+NIL
+
+(set_isa verb count select show print)
+NIL
+
+(set_isa prep of with to in for)
+NIL
+
+(set_isa comparator equal after before)
+NIL
+
+(set_isa adjective horror scifi romance comedy action male female g pg pg13 r x )
+NIL
+
+
+(putp 'movie table-ht 'movie)
+MOVIE
+
+(putp 'movies table-ht 'movie)
+MOVIE
+
+(putp 'rental table-ht 'rental)
+RENTAL
+
+(putp 'rentals table-ht 'rental)
+RENTAL
+
+(putp 'customer table-ht 'customer)
+CUSTOMER
+
+(putp 'customers table-ht 'customer)
+CUSTOMER
+
+
+ ;;;
+ ;;; first form:  verb [article] directObj prep [article] indirectObj
+ ;;;
+ (processRequest '(count the number of rentals ))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= RENTALS
+T
+
+
+ (processRequest '(count the number of movies ))
+ ******************************************************************
+  (COUNT THE NUMBER OF MOVIES)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= MOVIES
+T
+
+
+ (processRequest '(show ID for movies ))
+ ******************************************************************
+  (SHOW ID FOR MOVIES)
+    checkRequest returned T
+    verb= SHOW
+    directObj= ID
+    prep= FOR
+    indirectObj= MOVIES
+T
+
+
+ ;;;
+ ;;; second form: verb [article] directObj prep [article] indirectObj
+ ;;;                   prep [article] qualIndirectObj comparator [prep] qualValue
+ ;;;
+ (processRequest '(show the title of movies with rating equal to PG13))
+ ******************************************************************
+  (SHOW THE TITLE OF MOVIES WITH RATING EQUAL TO PG13)
+EQUAL
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= PG13
+T
+
+
+ (processRequest '(Count the number of rentals with date after 2018-10-01))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS WITH DATE AFTER 2018-10-01)
+AFTER
+    checkRequest returned NIL
+    verb= COUNT
+    directObj= NUMBER
+    prep= WITH
+    indirectObj= RENTALS
+    QualIndirectPrep= NIL
+    QualIndirectObj= DATE
+    Comparator= AFTER
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ (processRequest '(Show the title for the movie with ID equal to HP001))
+ ******************************************************************
+  (SHOW THE TITLE FOR THE MOVIE WITH ID EQUAL TO HP001)
+EQUAL
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIE
+    QualIndirectPrep= NIL
+    QualIndirectObj= ID
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= HP001
+T
+
+
+ (processRequest '(Select the name of the customer with custNr equal to 111))
+ ******************************************************************
+  (SELECT THE NAME OF THE CUSTOMER WITH CUSTNR EQUAL TO 111)
+EQUAL
+    checkRequest returned T
+    verb= SELECT
+    directObj= NAME
+    prep= WITH
+    indirectObj= CUSTOMER
+    QualIndirectPrep= NIL
+    QualIndirectObj= CUSTNR
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= 111
+T
+
+
+ ;;;
+ ;;;  Examples with NOT
+ ;;;
+ (processRequest '(Show title for movies with rating not equal to G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH RATING NOT EQUAL TO G)
+NOT
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NOT
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ ;;;
+ ;;; Some invalid requests
+ ;;;
+ (processRequest '(Show title for videos with a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR VIDEOS WITH A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= NIL
+NIL
+
+ (processRequest '(Show title for movies having a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES HAVING A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= MOVIES
+NIL
+
+ (processRequest '(Show title for movies with a rating of G or PG))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH A RATING OF G OR PG)
+OF
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+NIL
+
+
+ ;;; see if doing extra credit, return if not
+ (if (NOT(EQL doingExtra 'EC2))
+    (abort))
+Break 10 [13]> (load "p4Lisp.txt" :echo T :print T)
+;;        Loading file p4Lisp.txt ...
+
+;;;
+(defun checkRequest (parse)
+        (PROG (preposition)
+
+                ;;; 'verb check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'verb)
+                        (putp 'verb parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'directObj parse preposition)
+                        (return NIL))
+
+                ;;; 'prep check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'indirectObj parse preposition)
+                        (return NIL))
+
+                ;;; return true if end of first form
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                (if (isa preposition 'noun)
+                        (putp 'qualindirectObj parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+
+                (cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'comparator parse preposition)))
+                (print preposition)
+                (setf preposition (getToken parse))
+                (print preposition)
+                (if (isa preposition 'prep)
+                        (putp 'qualprep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (putp 'qualValue parse preposition)
+
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+        )
+
+)
+CHECKREQUEST
+
+
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+        (dolist (word partOfSpeech)
+                (putp word parse NIL)
+        )
+)
+RESETPARTSOFSPEECH
+
+
+(defmacro set_isa (partOfSpeech &rest words)
+        (dolist (word words)
+                (putp word word-dict partOfSpeech)
+        )
+)
+SET_ISA
+
+
+(defun isa (word partOfSpeech)
+        (setf words (getp word word-dict))
+        (if (eql words partOfSpeech) T NIL)
+)
+ISA
+
+;;        Loaded file p4Lisp.txt
+T
+Break 10 [13]> (load "p4LispRun.txt" :echo T :print T)
+;;        Loading file p4LispRun.txt ...
+;;; p4LispRun.txt - run the student's code
+;;; Use set_isa to set the part of speech for each of the words.
+(set_isa article a an the)
+NIL
+
+(set_isa noun movies movie rentals rental customer customers)
+NIL
+
+(set_isa noun ID title genre rating custNr name state date number gender)
+NIL
+
+(set_isa verb count select show print)
+NIL
+
+(set_isa prep of with to in for)
+NIL
+
+(set_isa comparator equal after before)
+NIL
+
+(set_isa adjective horror scifi romance comedy action male female g pg pg13 r x )
+NIL
+
+
+(putp 'movie table-ht 'movie)
+MOVIE
+
+(putp 'movies table-ht 'movie)
+MOVIE
+
+(putp 'rental table-ht 'rental)
+RENTAL
+
+(putp 'rentals table-ht 'rental)
+RENTAL
+
+(putp 'customer table-ht 'customer)
+CUSTOMER
+
+(putp 'customers table-ht 'customer)
+CUSTOMER
+
+
+ ;;;
+ ;;; first form:  verb [article] directObj prep [article] indirectObj
+ ;;;
+ (processRequest '(count the number of rentals ))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= RENTALS
+T
+
+
+ (processRequest '(count the number of movies ))
+ ******************************************************************
+  (COUNT THE NUMBER OF MOVIES)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= MOVIES
+T
+
+
+ (processRequest '(show ID for movies ))
+ ******************************************************************
+  (SHOW ID FOR MOVIES)
+    checkRequest returned T
+    verb= SHOW
+    directObj= ID
+    prep= FOR
+    indirectObj= MOVIES
+T
+
+
+ ;;;
+ ;;; second form: verb [article] directObj prep [article] indirectObj
+ ;;;                   prep [article] qualIndirectObj comparator [prep] qualValue
+ ;;;
+ (processRequest '(show the title of movies with rating equal to PG13))
+ ******************************************************************
+  (SHOW THE TITLE OF MOVIES WITH RATING EQUAL TO PG13)
+EQUAL
+TO
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= PG13
+T
+
+
+ (processRequest '(Count the number of rentals with date after 2018-10-01))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS WITH DATE AFTER 2018-10-01)
+AFTER
+|2018-10-01|
+    checkRequest returned NIL
+    verb= COUNT
+    directObj= NUMBER
+    prep= WITH
+    indirectObj= RENTALS
+    QualIndirectPrep= NIL
+    QualIndirectObj= DATE
+    Comparator= AFTER
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ (processRequest '(Show the title for the movie with ID equal to HP001))
+ ******************************************************************
+  (SHOW THE TITLE FOR THE MOVIE WITH ID EQUAL TO HP001)
+EQUAL
+TO
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIE
+    QualIndirectPrep= NIL
+    QualIndirectObj= ID
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= HP001
+T
+
+
+ (processRequest '(Select the name of the customer with custNr equal to 111))
+ ******************************************************************
+  (SELECT THE NAME OF THE CUSTOMER WITH CUSTNR EQUAL TO 111)
+EQUAL
+TO
+    checkRequest returned T
+    verb= SELECT
+    directObj= NAME
+    prep= WITH
+    indirectObj= CUSTOMER
+    QualIndirectPrep= NIL
+    QualIndirectObj= CUSTNR
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= 111
+T
+
+
+ ;;;
+ ;;;  Examples with NOT
+ ;;;
+ (processRequest '(Show title for movies with rating not equal to G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH RATING NOT EQUAL TO G)
+NOT
+EQUAL
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NOT
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ ;;;
+ ;;; Some invalid requests
+ ;;;
+ (processRequest '(Show title for videos with a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR VIDEOS WITH A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= NIL
+NIL
+
+ (processRequest '(Show title for movies having a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES HAVING A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= MOVIES
+NIL
+
+ (processRequest '(Show title for movies with a rating of G or PG))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH A RATING OF G OR PG)
+OF
+G
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+NIL
+
+
+ ;;; see if doing extra credit, return if not
+ (if (NOT(EQL doingExtra 'EC2))
+    (abort))
+Break 10 [13]> (load "p4Lisp.txt" :echo T :print T)
+;;        Loading file p4Lisp.txt ...
+
+;;;
+(defun checkRequest (parse)
+        (PROG (preposition)
+
+                ;;; 'verb check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'verb)
+                        (putp 'verb parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'directObj parse preposition)
+                        (return NIL))
+
+                ;;; 'prep check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'indirectObj parse preposition)
+                        (return NIL))
+
+                ;;; return true if end of first form
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                (if (isa preposition 'noun)
+                        (putp 'qualindirectObj parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+
+                (cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'comparator parse preposition)))
+                (setf preposition (getToken parse))
+
+                (print preposition)
+
+                (if (isa preposition 'prep)
+                        (putp 'qualprep parse preposition)
+                        (return NIL))
+                (print preposition)
+                (setf preposition (getToken parse))
+                (putp 'qualValue parse preposition)
+
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+        )
+
+)
+CHECKREQUEST
+
+
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+        (dolist (word partOfSpeech)
+                (putp word parse NIL)
+        )
+)
+RESETPARTSOFSPEECH
+
+
+(defmacro set_isa (partOfSpeech &rest words)
+        (dolist (word words)
+                (putp word word-dict partOfSpeech)
+        )
+)
+SET_ISA
+
+
+(defun isa (word partOfSpeech)
+        (setf words (getp word word-dict))
+        (if (eql words partOfSpeech) T NIL)
+)
+ISA
+
+;;        Loaded file p4Lisp.txt
+T
+Break 10 [13]> (load "p4LispRun.txt" :echo T :print T)
+;;        Loading file p4LispRun.txt ...
+;;; p4LispRun.txt - run the student's code
+;;; Use set_isa to set the part of speech for each of the words.
+(set_isa article a an the)
+NIL
+
+(set_isa noun movies movie rentals rental customer customers)
+NIL
+
+(set_isa noun ID title genre rating custNr name state date number gender)
+NIL
+
+(set_isa verb count select show print)
+NIL
+
+(set_isa prep of with to in for)
+NIL
+
+(set_isa comparator equal after before)
+NIL
+
+(set_isa adjective horror scifi romance comedy action male female g pg pg13 r x )
+NIL
+
+
+(putp 'movie table-ht 'movie)
+MOVIE
+
+(putp 'movies table-ht 'movie)
+MOVIE
+
+(putp 'rental table-ht 'rental)
+RENTAL
+
+(putp 'rentals table-ht 'rental)
+RENTAL
+
+(putp 'customer table-ht 'customer)
+CUSTOMER
+
+(putp 'customers table-ht 'customer)
+CUSTOMER
+
+
+ ;;;
+ ;;; first form:  verb [article] directObj prep [article] indirectObj
+ ;;;
+ (processRequest '(count the number of rentals ))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= RENTALS
+T
+
+
+ (processRequest '(count the number of movies ))
+ ******************************************************************
+  (COUNT THE NUMBER OF MOVIES)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= MOVIES
+T
+
+
+ (processRequest '(show ID for movies ))
+ ******************************************************************
+  (SHOW ID FOR MOVIES)
+    checkRequest returned T
+    verb= SHOW
+    directObj= ID
+    prep= FOR
+    indirectObj= MOVIES
+T
+
+
+ ;;;
+ ;;; second form: verb [article] directObj prep [article] indirectObj
+ ;;;                   prep [article] qualIndirectObj comparator [prep] qualValue
+ ;;;
+ (processRequest '(show the title of movies with rating equal to PG13))
+ ******************************************************************
+  (SHOW THE TITLE OF MOVIES WITH RATING EQUAL TO PG13)
+TO
+TO
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= PG13
+T
+
+
+ (processRequest '(Count the number of rentals with date after 2018-10-01))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS WITH DATE AFTER 2018-10-01)
+|2018-10-01|
+    checkRequest returned NIL
+    verb= COUNT
+    directObj= NUMBER
+    prep= WITH
+    indirectObj= RENTALS
+    QualIndirectPrep= NIL
+    QualIndirectObj= DATE
+    Comparator= AFTER
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ (processRequest '(Show the title for the movie with ID equal to HP001))
+ ******************************************************************
+  (SHOW THE TITLE FOR THE MOVIE WITH ID EQUAL TO HP001)
+TO
+TO
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIE
+    QualIndirectPrep= NIL
+    QualIndirectObj= ID
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= HP001
+T
+
+
+ (processRequest '(Select the name of the customer with custNr equal to 111))
+ ******************************************************************
+  (SELECT THE NAME OF THE CUSTOMER WITH CUSTNR EQUAL TO 111)
+TO
+TO
+    checkRequest returned T
+    verb= SELECT
+    directObj= NAME
+    prep= WITH
+    indirectObj= CUSTOMER
+    QualIndirectPrep= NIL
+    QualIndirectObj= CUSTNR
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= 111
+T
+
+
+ ;;;
+ ;;;  Examples with NOT
+ ;;;
+ (processRequest '(Show title for movies with rating not equal to G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH RATING NOT EQUAL TO G)
+EQUAL
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NOT
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ ;;;
+ ;;; Some invalid requests
+ ;;;
+ (processRequest '(Show title for videos with a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR VIDEOS WITH A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= NIL
+NIL
+
+ (processRequest '(Show title for movies having a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES HAVING A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= MOVIES
+NIL
+
+ (processRequest '(Show title for movies with a rating of G or PG))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH A RATING OF G OR PG)
+G
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+NIL
+
+
+ ;;; see if doing extra credit, return if not
+ (if (NOT(EQL doingExtra 'EC2))
+    (abort))
+Break 10 [13]> (load "p4Lisp.txt" :echo T :print T)
+;;        Loading file p4Lisp.txt ...
+
+;;;
+(defun checkRequest (parse)
+        (PROG (preposition)
+
+                ;;; 'verb check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'verb)
+                        (putp 'verb parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'directObj parse preposition)
+                        (return NIL))
+
+                ;;; 'prep check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'indirectObj parse preposition)
+                        (return NIL))
+
+                ;;; return true if end of first form
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                (if (isa preposition 'noun)
+                        (putp 'qualindirectObj parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+
+                (cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'comparator parse preposition)))
+
+                (setf preposition (getToken parse))
+                (print preposition)
+                (isa preposition 'prep)
+                (if (isa preposition 'prep)
+                        (putp 'qualprep parse preposition)
+                        (return NIL))
+                (print preposition)
+                (setf preposition (getToken parse))
+                (putp 'qualValue parse preposition)
+
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+        )
+
+)
+CHECKREQUEST
+
+
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+        (dolist (word partOfSpeech)
+                (putp word parse NIL)
+        )
+)
+RESETPARTSOFSPEECH
+
+
+(defmacro set_isa (partOfSpeech &rest words)
+        (dolist (word words)
+                (putp word word-dict partOfSpeech)
+        )
+)
+SET_ISA
+
+
+(defun isa (word partOfSpeech)
+        (setf words (getp word word-dict))
+        (if (eql words partOfSpeech) T NIL)
+)
+ISA
+
+;;        Loaded file p4Lisp.txt
+T
+Break 10 [13]> (load "p4LispRun.txt" :echo T :print T)
+;;        Loading file p4LispRun.txt ...
+;;; p4LispRun.txt - run the student's code
+;;; Use set_isa to set the part of speech for each of the words.
+(set_isa article a an the)
+NIL
+
+(set_isa noun movies movie rentals rental customer customers)
+NIL
+
+(set_isa noun ID title genre rating custNr name state date number gender)
+NIL
+
+(set_isa verb count select show print)
+NIL
+
+(set_isa prep of with to in for)
+NIL
+
+(set_isa comparator equal after before)
+NIL
+
+(set_isa adjective horror scifi romance comedy action male female g pg pg13 r x )
+NIL
+
+
+(putp 'movie table-ht 'movie)
+MOVIE
+
+(putp 'movies table-ht 'movie)
+MOVIE
+
+(putp 'rental table-ht 'rental)
+RENTAL
+
+(putp 'rentals table-ht 'rental)
+RENTAL
+
+(putp 'customer table-ht 'customer)
+CUSTOMER
+
+(putp 'customers table-ht 'customer)
+CUSTOMER
+
+
+ ;;;
+ ;;; first form:  verb [article] directObj prep [article] indirectObj
+ ;;;
+ (processRequest '(count the number of rentals ))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= RENTALS
+T
+
+
+ (processRequest '(count the number of movies ))
+ ******************************************************************
+  (COUNT THE NUMBER OF MOVIES)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= MOVIES
+T
+
+
+ (processRequest '(show ID for movies ))
+ ******************************************************************
+  (SHOW ID FOR MOVIES)
+    checkRequest returned T
+    verb= SHOW
+    directObj= ID
+    prep= FOR
+    indirectObj= MOVIES
+T
+
+
+ ;;;
+ ;;; second form: verb [article] directObj prep [article] indirectObj
+ ;;;                   prep [article] qualIndirectObj comparator [prep] qualValue
+ ;;;
+ (processRequest '(show the title of movies with rating equal to PG13))
+ ******************************************************************
+  (SHOW THE TITLE OF MOVIES WITH RATING EQUAL TO PG13)
+TO
+TO
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= PG13
+T
+
+
+ (processRequest '(Count the number of rentals with date after 2018-10-01))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS WITH DATE AFTER 2018-10-01)
+|2018-10-01|
+    checkRequest returned NIL
+    verb= COUNT
+    directObj= NUMBER
+    prep= WITH
+    indirectObj= RENTALS
+    QualIndirectPrep= NIL
+    QualIndirectObj= DATE
+    Comparator= AFTER
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ (processRequest '(Show the title for the movie with ID equal to HP001))
+ ******************************************************************
+  (SHOW THE TITLE FOR THE MOVIE WITH ID EQUAL TO HP001)
+TO
+TO
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIE
+    QualIndirectPrep= NIL
+    QualIndirectObj= ID
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= HP001
+T
+
+
+ (processRequest '(Select the name of the customer with custNr equal to 111))
+ ******************************************************************
+  (SELECT THE NAME OF THE CUSTOMER WITH CUSTNR EQUAL TO 111)
+TO
+TO
+    checkRequest returned T
+    verb= SELECT
+    directObj= NAME
+    prep= WITH
+    indirectObj= CUSTOMER
+    QualIndirectPrep= NIL
+    QualIndirectObj= CUSTNR
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= 111
+T
+
+
+ ;;;
+ ;;;  Examples with NOT
+ ;;;
+ (processRequest '(Show title for movies with rating not equal to G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH RATING NOT EQUAL TO G)
+EQUAL
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NOT
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ ;;;
+ ;;; Some invalid requests
+ ;;;
+ (processRequest '(Show title for videos with a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR VIDEOS WITH A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= NIL
+NIL
+
+ (processRequest '(Show title for movies having a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES HAVING A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= MOVIES
+NIL
+
+ (processRequest '(Show title for movies with a rating of G or PG))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH A RATING OF G OR PG)
+G
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+NIL
+
+
+ ;;; see if doing extra credit, return if not
+ (if (NOT(EQL doingExtra 'EC2))
+    (abort))
+Break 10 [13]> (load "p4Lisp.txt" :echo T :print T)
+;;        Loading file p4Lisp.txt ...
+
+;;;
+(defun checkRequest (parse)
+        (PROG (preposition)
+
+                ;;; 'verb check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'verb)
+                        (putp 'verb parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'directObj parse preposition)
+                        (return NIL))
+
+                ;;; 'prep check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'indirectObj parse preposition)
+                        (return NIL))
+
+                ;;; return true if end of first form
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                (if (isa preposition 'noun)
+                        (putp 'qualindirectObj parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+
+                (cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'comparator parse preposition)))
+
+                (setf preposition (getToken parse))
+                (print preposition)
+                (print (isa preposition 'prep))
+                (if (isa preposition 'prep)
+                        (putp 'qualprep parse preposition)
+                        (return NIL))
+                (print preposition)
+                (setf preposition (getToken parse))
+                (putp 'qualValue parse preposition)
+
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+        )
+
+)
+CHECKREQUEST
+
+
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+        (dolist (word partOfSpeech)
+                (putp word parse NIL)
+        )
+)
+RESETPARTSOFSPEECH
+
+
+(defmacro set_isa (partOfSpeech &rest words)
+        (dolist (word words)
+                (putp word word-dict partOfSpeech)
+        )
+)
+SET_ISA
+
+
+(defun isa (word partOfSpeech)
+        (setf words (getp word word-dict))
+        (if (eql words partOfSpeech) T NIL)
+)
+ISA
+
+;;        Loaded file p4Lisp.txt
+T
+Break 10 [13]> (load "p4LispRun.txt" :echo T :print T)
+;;        Loading file p4LispRun.txt ...
+;;; p4LispRun.txt - run the student's code
+;;; Use set_isa to set the part of speech for each of the words.
+(set_isa article a an the)
+NIL
+
+(set_isa noun movies movie rentals rental customer customers)
+NIL
+
+(set_isa noun ID title genre rating custNr name state date number gender)
+NIL
+
+(set_isa verb count select show print)
+NIL
+
+(set_isa prep of with to in for)
+NIL
+
+(set_isa comparator equal after before)
+NIL
+
+(set_isa adjective horror scifi romance comedy action male female g pg pg13 r x )
+NIL
+
+
+(putp 'movie table-ht 'movie)
+MOVIE
+
+(putp 'movies table-ht 'movie)
+MOVIE
+
+(putp 'rental table-ht 'rental)
+RENTAL
+
+(putp 'rentals table-ht 'rental)
+RENTAL
+
+(putp 'customer table-ht 'customer)
+CUSTOMER
+
+(putp 'customers table-ht 'customer)
+CUSTOMER
+
+
+ ;;;
+ ;;; first form:  verb [article] directObj prep [article] indirectObj
+ ;;;
+ (processRequest '(count the number of rentals ))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= RENTALS
+T
+
+
+ (processRequest '(count the number of movies ))
+ ******************************************************************
+  (COUNT THE NUMBER OF MOVIES)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= MOVIES
+T
+
+
+ (processRequest '(show ID for movies ))
+ ******************************************************************
+  (SHOW ID FOR MOVIES)
+    checkRequest returned T
+    verb= SHOW
+    directObj= ID
+    prep= FOR
+    indirectObj= MOVIES
+T
+
+
+ ;;;
+ ;;; second form: verb [article] directObj prep [article] indirectObj
+ ;;;                   prep [article] qualIndirectObj comparator [prep] qualValue
+ ;;;
+ (processRequest '(show the title of movies with rating equal to PG13))
+ ******************************************************************
+  (SHOW THE TITLE OF MOVIES WITH RATING EQUAL TO PG13)
+TO
+T
+TO
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= PG13
+T
+
+
+ (processRequest '(Count the number of rentals with date after 2018-10-01))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS WITH DATE AFTER 2018-10-01)
+|2018-10-01|
+NIL
+    checkRequest returned NIL
+    verb= COUNT
+    directObj= NUMBER
+    prep= WITH
+    indirectObj= RENTALS
+    QualIndirectPrep= NIL
+    QualIndirectObj= DATE
+    Comparator= AFTER
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ (processRequest '(Show the title for the movie with ID equal to HP001))
+ ******************************************************************
+  (SHOW THE TITLE FOR THE MOVIE WITH ID EQUAL TO HP001)
+TO
+T
+TO
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIE
+    QualIndirectPrep= NIL
+    QualIndirectObj= ID
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= HP001
+T
+
+
+ (processRequest '(Select the name of the customer with custNr equal to 111))
+ ******************************************************************
+  (SELECT THE NAME OF THE CUSTOMER WITH CUSTNR EQUAL TO 111)
+TO
+T
+TO
+    checkRequest returned T
+    verb= SELECT
+    directObj= NAME
+    prep= WITH
+    indirectObj= CUSTOMER
+    QualIndirectPrep= NIL
+    QualIndirectObj= CUSTNR
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= 111
+T
+
+
+ ;;;
+ ;;;  Examples with NOT
+ ;;;
+ (processRequest '(Show title for movies with rating not equal to G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH RATING NOT EQUAL TO G)
+EQUAL
+NIL
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NOT
+    QualPrep= NIL
+    QualValue= NIL
+NIL
+
+
+ ;;;
+ ;;; Some invalid requests
+ ;;;
+ (processRequest '(Show title for videos with a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR VIDEOS WITH A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= NIL
+NIL
+
+ (processRequest '(Show title for movies having a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES HAVING A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= MOVIES
+NIL
+
+ (processRequest '(Show title for movies with a rating of G or PG))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH A RATING OF G OR PG)
+G
+NIL
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+NIL
+
+
+ ;;; see if doing extra credit, return if not
+ (if (NOT(EQL doingExtra 'EC2))
+    (abort))
+Break 10 [13]> (load "p4Lisp.txt" :echo T :print T)
+;;        Loading file p4Lisp.txt ...
+
+;;;
+(defun checkRequest (parse)
+        (PROG (preposition)
+
+                ;;; 'verb check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'verb)
+                        (putp 'verb parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'directObj parse preposition)
+                        (return NIL))
+
+                ;;; 'prep check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'indirectObj parse preposition)
+                        (return NIL))
+
+                ;;; return true if end of first form
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                (if (isa preposition 'noun)
+                        (putp 'qualindirectObj parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+
+                (cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'comparator parse preposition)))
+
+                (setf preposition (getToken parse))
+                (cond ( (isa preposition 'prep) (putp 'qualprep parse preposition))
+                      ( (eql preposition 'equal) (putp 'qualprep parse preposition)))
+
+                (setf preposition (getToken parse))
+                (putp 'qualValue parse preposition)
+
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+        )
+
+)
+CHECKREQUEST
+
+
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+        (dolist (word partOfSpeech)
+                (putp word parse NIL)
+        )
+)
+RESETPARTSOFSPEECH
+
+
+(defmacro set_isa (partOfSpeech &rest words)
+        (dolist (word words)
+                (putp word word-dict partOfSpeech)
+        )
+)
+SET_ISA
+
+
+(defun isa (word partOfSpeech)
+        (setf words (getp word word-dict))
+        (if (eql words partOfSpeech) T NIL)
+)
+ISA
+
+;;        Loaded file p4Lisp.txt
+T
+Break 10 [13]> (load "p4LispRun.txt" :echo T :print T)
+;;        Loading file p4LispRun.txt ...
+;;; p4LispRun.txt - run the student's code
+;;; Use set_isa to set the part of speech for each of the words.
+(set_isa article a an the)
+NIL
+
+(set_isa noun movies movie rentals rental customer customers)
+NIL
+
+(set_isa noun ID title genre rating custNr name state date number gender)
+NIL
+
+(set_isa verb count select show print)
+NIL
+
+(set_isa prep of with to in for)
+NIL
+
+(set_isa comparator equal after before)
+NIL
+
+(set_isa adjective horror scifi romance comedy action male female g pg pg13 r x )
+NIL
+
+
+(putp 'movie table-ht 'movie)
+MOVIE
+
+(putp 'movies table-ht 'movie)
+MOVIE
+
+(putp 'rental table-ht 'rental)
+RENTAL
+
+(putp 'rentals table-ht 'rental)
+RENTAL
+
+(putp 'customer table-ht 'customer)
+CUSTOMER
+
+(putp 'customers table-ht 'customer)
+CUSTOMER
+
+
+ ;;;
+ ;;; first form:  verb [article] directObj prep [article] indirectObj
+ ;;;
+ (processRequest '(count the number of rentals ))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= RENTALS
+T
+
+
+ (processRequest '(count the number of movies ))
+ ******************************************************************
+  (COUNT THE NUMBER OF MOVIES)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= MOVIES
+T
+
+
+ (processRequest '(show ID for movies ))
+ ******************************************************************
+  (SHOW ID FOR MOVIES)
+    checkRequest returned T
+    verb= SHOW
+    directObj= ID
+    prep= FOR
+    indirectObj= MOVIES
+T
+
+
+ ;;;
+ ;;; second form: verb [article] directObj prep [article] indirectObj
+ ;;;                   prep [article] qualIndirectObj comparator [prep] qualValue
+ ;;;
+ (processRequest '(show the title of movies with rating equal to PG13))
+ ******************************************************************
+  (SHOW THE TITLE OF MOVIES WITH RATING EQUAL TO PG13)
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= PG13
+T
+
+
+ (processRequest '(Count the number of rentals with date after 2018-10-01))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS WITH DATE AFTER 2018-10-01)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= WITH
+    indirectObj= RENTALS
+    QualIndirectPrep= NIL
+    QualIndirectObj= DATE
+    Comparator= AFTER
+    QualPrep= NIL
+    QualValue= NIL
+T
+
+
+ (processRequest '(Show the title for the movie with ID equal to HP001))
+ ******************************************************************
+  (SHOW THE TITLE FOR THE MOVIE WITH ID EQUAL TO HP001)
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIE
+    QualIndirectPrep= NIL
+    QualIndirectObj= ID
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= HP001
+T
+
+
+ (processRequest '(Select the name of the customer with custNr equal to 111))
+ ******************************************************************
+  (SELECT THE NAME OF THE CUSTOMER WITH CUSTNR EQUAL TO 111)
+    checkRequest returned T
+    verb= SELECT
+    directObj= NAME
+    prep= WITH
+    indirectObj= CUSTOMER
+    QualIndirectPrep= NIL
+    QualIndirectObj= CUSTNR
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= 111
+T
+
+
+ ;;;
+ ;;;  Examples with NOT
+ ;;;
+ (processRequest '(Show title for movies with rating not equal to G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH RATING NOT EQUAL TO G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NOT
+    QualPrep= EQUAL
+    QualValue= TO
+NIL
+
+
+ ;;;
+ ;;; Some invalid requests
+ ;;;
+ (processRequest '(Show title for videos with a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR VIDEOS WITH A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= NIL
+NIL
+
+ (processRequest '(Show title for movies having a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES HAVING A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= MOVIES
+NIL
+
+ (processRequest '(Show title for movies with a rating of G or PG))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH A RATING OF G OR PG)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NIL
+    QualPrep= NIL
+    QualValue= OR
+NIL
+
+
+ ;;; see if doing extra credit, return if not
+ (if (NOT(EQL doingExtra 'EC2))
+    (abort))
+Break 10 [13]> (load "p4Lisp.txt" :echo T :print T)
+;;        Loading file p4Lisp.txt ...
+
+;;;
+(defun checkRequest (parse)
+        (PROG (preposition)
+
+                ;;; 'verb check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'verb)
+                        (putp 'verb parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'directObj parse preposition)
+                        (return NIL))
+
+                ;;; 'prep check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'indirectObj parse preposition)
+                        (return NIL))
+
+                ;;; return true if end of first form
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                (if (isa preposition 'noun)
+                        (putp 'qualindirectObj parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+
+                (cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'comparator parse preposition)))
+
+                (setf preposition (getToken parse))
+                (cond ( (isa preposition 'prep) (putp 'qualprep parse preposition))
+                      ( (eql preposition 'equal) (setf preposition (getToken parse)))
+
+                (setf preposition (getToken parse))
+                (putp 'qualValue parse preposition)
+
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+        )
+
+)
+
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+        (dolist (word partOfSpeech)
+                (putp word parse NIL)
+        )
+)
+
+(defmacro set_isa (partOfSpeech &rest words)
+        (dolist (word words)
+                (putp word word-dict partOfSpeech)
+        )
+)
+
+(defun isa (word partOfSpeech)
+        (setf words (getp word word-dict))
+        (if (eql words partOfSpeech) T NIL)
+)
+
+*** - READ: input stream
+      #<IO ECHO-STREAM #<INPUT BUFFERED FILE-STREAM CHARACTER #P"p4Lisp.txt" @88> #<IO SYNONYM-STREAM *DEBUG-IO*>>
+      ends within an object
+The following restarts are available:
+ABORT          :R1      Abort debug loop
+ABORT          :R2      Abort debug loop
+ABORT          :R3      Abort debug loop
+ABORT          :R4      Abort debug loop
+ABORT          :R5      Abort debug loop
+ABORT          :R6      Abort debug loop
+ABORT          :R7      Abort debug loop
+ABORT          :R8      Abort debug loop
+ABORT          :R9      Abort debug loop
+ABORT          :R10     Abort debug loop
+ABORT          :R11     Abort main loop
+Break 11 [14]> (load "p4Lisp.txt" :echo T :print T)
+;;         Loading file p4Lisp.txt ...
+
+;;;
+(defun checkRequest (parse)
+        (PROG (preposition)
+
+                ;;; 'verb check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'verb)
+                        (putp 'verb parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'directObj parse preposition)
+                        (return NIL))
+
+                ;;; 'prep check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'indirectObj parse preposition)
+                        (return NIL))
+
+                ;;; return true if end of first form
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                (if (isa preposition 'noun)
+                        (putp 'qualindirectObj parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+
+                (cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'comparator parse preposition)))
+
+                (setf preposition (getToken parse))
+                (cond ( (isa preposition 'prep) (putp 'qualprep parse preposition))
+                      ( (eql preposition 'equal) (putp 'qualprep parse preposition)))
+
+                (setf preposition (getToken parse))
+                (putp 'qualValue parse preposition)
+
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+        )
+
+)
+CHECKREQUEST
+
+
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+        (dolist (word partOfSpeech)
+                (putp word parse NIL)
+        )
+)
+RESETPARTSOFSPEECH
+
+
+(defmacro set_isa (partOfSpeech &rest words)
+        (dolist (word words)
+                (putp word word-dict partOfSpeech)
+        )
+)
+SET_ISA
+
+
+(defun isa (word partOfSpeech)
+        (setf words (getp word word-dict))
+        (if (eql words partOfSpeech) T NIL)
+)
+ISA
+
+;;         Loaded file p4Lisp.txt
+T
+Break 11 [14]> (load "p4LispRun.txt" :echo T :print T)
+;;         Loading file p4LispRun.txt ...
+;;; p4LispRun.txt - run the student's code
+;;; Use set_isa to set the part of speech for each of the words.
+(set_isa article a an the)
+NIL
+
+(set_isa noun movies movie rentals rental customer customers)
+NIL
+
+(set_isa noun ID title genre rating custNr name state date number gender)
+NIL
+
+(set_isa verb count select show print)
+NIL
+
+(set_isa prep of with to in for)
+NIL
+
+(set_isa comparator equal after before)
+NIL
+
+(set_isa adjective horror scifi romance comedy action male female g pg pg13 r x )
+NIL
+
+
+(putp 'movie table-ht 'movie)
+MOVIE
+
+(putp 'movies table-ht 'movie)
+MOVIE
+
+(putp 'rental table-ht 'rental)
+RENTAL
+
+(putp 'rentals table-ht 'rental)
+RENTAL
+
+(putp 'customer table-ht 'customer)
+CUSTOMER
+
+(putp 'customers table-ht 'customer)
+CUSTOMER
+
+
+ ;;;
+ ;;; first form:  verb [article] directObj prep [article] indirectObj
+ ;;;
+ (processRequest '(count the number of rentals ))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= RENTALS
+T
+
+
+ (processRequest '(count the number of movies ))
+ ******************************************************************
+  (COUNT THE NUMBER OF MOVIES)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= MOVIES
+T
+
+
+ (processRequest '(show ID for movies ))
+ ******************************************************************
+  (SHOW ID FOR MOVIES)
+    checkRequest returned T
+    verb= SHOW
+    directObj= ID
+    prep= FOR
+    indirectObj= MOVIES
+T
+
+
+ ;;;
+ ;;; second form: verb [article] directObj prep [article] indirectObj
+ ;;;                   prep [article] qualIndirectObj comparator [prep] qualValue
+ ;;;
+ (processRequest '(show the title of movies with rating equal to PG13))
+ ******************************************************************
+  (SHOW THE TITLE OF MOVIES WITH RATING EQUAL TO PG13)
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= PG13
+T
+
+
+ (processRequest '(Count the number of rentals with date after 2018-10-01))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS WITH DATE AFTER 2018-10-01)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= WITH
+    indirectObj= RENTALS
+    QualIndirectPrep= NIL
+    QualIndirectObj= DATE
+    Comparator= AFTER
+    QualPrep= NIL
+    QualValue= NIL
+T
+
+
+ (processRequest '(Show the title for the movie with ID equal to HP001))
+ ******************************************************************
+  (SHOW THE TITLE FOR THE MOVIE WITH ID EQUAL TO HP001)
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIE
+    QualIndirectPrep= NIL
+    QualIndirectObj= ID
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= HP001
+T
+
+
+ (processRequest '(Select the name of the customer with custNr equal to 111))
+ ******************************************************************
+  (SELECT THE NAME OF THE CUSTOMER WITH CUSTNR EQUAL TO 111)
+    checkRequest returned T
+    verb= SELECT
+    directObj= NAME
+    prep= WITH
+    indirectObj= CUSTOMER
+    QualIndirectPrep= NIL
+    QualIndirectObj= CUSTNR
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= 111
+T
+
+
+ ;;;
+ ;;;  Examples with NOT
+ ;;;
+ (processRequest '(Show title for movies with rating not equal to G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH RATING NOT EQUAL TO G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NOT
+    QualPrep= EQUAL
+    QualValue= TO
+NIL
+
+
+ ;;;
+ ;;; Some invalid requests
+ ;;;
+ (processRequest '(Show title for videos with a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR VIDEOS WITH A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= NIL
+NIL
+
+ (processRequest '(Show title for movies having a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES HAVING A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= MOVIES
+NIL
+
+ (processRequest '(Show title for movies with a rating of G or PG))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH A RATING OF G OR PG)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NIL
+    QualPrep= NIL
+    QualValue= OR
+NIL
+
+
+ ;;; see if doing extra credit, return if not
+ (if (NOT(EQL doingExtra 'EC2))
+    (abort))
+Break 11 [14]> (load "p4Lisp.txt" :echo T :print T)
+;;         Loading file p4Lisp.txt ...
+
+;;;
+(defun checkRequest (parse)
+        (PROG (preposition)
+
+                ;;; 'verb check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'verb)
+                        (putp 'verb parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'directObj parse preposition)
+                        (return NIL))
+
+                ;;; 'prep check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                ;;; 'article check and input
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                ;;; 'noun check and input
+                (if (isa preposition 'noun)
+                        (putp 'indirectObj parse preposition)
+                        (return NIL))
+
+                ;;; return true if end of first form
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+
+                (if (isa preposition 'prep)
+                        (putp 'prep parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+                (if (isa preposition 'article)
+                        (setf preposition (getToken parse)))
+
+                (if (isa preposition 'noun)
+                        (putp 'qualindirectObj parse preposition)
+                        (return NIL))
+
+                (setf preposition (getToken parse))
+
+                (cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'comparator parse preposition)))
+
+                (setf preposition (getToken parse))
+                (cond ( (isa preposition 'prep) (putp 'qualprep parse preposition))
+                      ( (eql preposition 'equal) (setf preposition (getToken parse))))
+
+                (setf preposition (getToken parse))
+                (putp 'qualValue parse preposition)
+
+                (setf preposition (getToken parse))
+                (if (NULL preposition) (return T))
+        )
+
+)
+CHECKREQUEST
+
+
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+        (dolist (word partOfSpeech)
+                (putp word parse NIL)
+        )
+)
+RESETPARTSOFSPEECH
+
+
+(defmacro set_isa (partOfSpeech &rest words)
+        (dolist (word words)
+                (putp word word-dict partOfSpeech)
+        )
+)
+SET_ISA
+
+
+(defun isa (word partOfSpeech)
+        (setf words (getp word word-dict))
+        (if (eql words partOfSpeech) T NIL)
+)
+ISA
+
+;;         Loaded file p4Lisp.txt
+T
+Break 11 [14]> (load "p4LispRun.txt" :echo T :print T)
+;;         Loading file p4LispRun.txt ...
+;;; p4LispRun.txt - run the student's code
+;;; Use set_isa to set the part of speech for each of the words.
+(set_isa article a an the)
+NIL
+
+(set_isa noun movies movie rentals rental customer customers)
+NIL
+
+(set_isa noun ID title genre rating custNr name state date number gender)
+NIL
+
+(set_isa verb count select show print)
+NIL
+
+(set_isa prep of with to in for)
+NIL
+
+(set_isa comparator equal after before)
+NIL
+
+(set_isa adjective horror scifi romance comedy action male female g pg pg13 r x )
+NIL
+
+
+(putp 'movie table-ht 'movie)
+MOVIE
+
+(putp 'movies table-ht 'movie)
+MOVIE
+
+(putp 'rental table-ht 'rental)
+RENTAL
+
+(putp 'rentals table-ht 'rental)
+RENTAL
+
+(putp 'customer table-ht 'customer)
+CUSTOMER
+
+(putp 'customers table-ht 'customer)
+CUSTOMER
+
+
+ ;;;
+ ;;; first form:  verb [article] directObj prep [article] indirectObj
+ ;;;
+ (processRequest '(count the number of rentals ))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= RENTALS
+T
+
+
+ (processRequest '(count the number of movies ))
+ ******************************************************************
+  (COUNT THE NUMBER OF MOVIES)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= OF
+    indirectObj= MOVIES
+T
+
+
+ (processRequest '(show ID for movies ))
+ ******************************************************************
+  (SHOW ID FOR MOVIES)
+    checkRequest returned T
+    verb= SHOW
+    directObj= ID
+    prep= FOR
+    indirectObj= MOVIES
+T
+
+
+ ;;;
+ ;;; second form: verb [article] directObj prep [article] indirectObj
+ ;;;                   prep [article] qualIndirectObj comparator [prep] qualValue
+ ;;;
+ (processRequest '(show the title of movies with rating equal to PG13))
+ ******************************************************************
+  (SHOW THE TITLE OF MOVIES WITH RATING EQUAL TO PG13)
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= PG13
+T
+
+
+ (processRequest '(Count the number of rentals with date after 2018-10-01))
+ ******************************************************************
+  (COUNT THE NUMBER OF RENTALS WITH DATE AFTER 2018-10-01)
+    checkRequest returned T
+    verb= COUNT
+    directObj= NUMBER
+    prep= WITH
+    indirectObj= RENTALS
+    QualIndirectPrep= NIL
+    QualIndirectObj= DATE
+    Comparator= AFTER
+    QualPrep= NIL
+    QualValue= NIL
+T
+
+
+ (processRequest '(Show the title for the movie with ID equal to HP001))
+ ******************************************************************
+  (SHOW THE TITLE FOR THE MOVIE WITH ID EQUAL TO HP001)
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIE
+    QualIndirectPrep= NIL
+    QualIndirectObj= ID
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= HP001
+T
+
+
+ (processRequest '(Select the name of the customer with custNr equal to 111))
+ ******************************************************************
+  (SELECT THE NAME OF THE CUSTOMER WITH CUSTNR EQUAL TO 111)
+    checkRequest returned T
+    verb= SELECT
+    directObj= NAME
+    prep= WITH
+    indirectObj= CUSTOMER
+    QualIndirectPrep= NIL
+    QualIndirectObj= CUSTNR
+    Comparator= EQUAL
+    QualPrep= TO
+    QualValue= 111
+T
+
+
+ ;;;
+ ;;;  Examples with NOT
+ ;;;
+ (processRequest '(Show title for movies with rating not equal to G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH RATING NOT EQUAL TO G)
+    checkRequest returned T
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NOT
+    QualPrep= NIL
+    QualValue= G
+T
+
+
+ ;;;
+ ;;; Some invalid requests
+ ;;;
+ (processRequest '(Show title for videos with a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR VIDEOS WITH A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= NIL
+NIL
+
+ (processRequest '(Show title for movies having a rating of G))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES HAVING A RATING OF G)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= FOR
+    indirectObj= MOVIES
+NIL
+
+ (processRequest '(Show title for movies with a rating of G or PG))
+ ******************************************************************
+  (SHOW TITLE FOR MOVIES WITH A RATING OF G OR PG)
+    checkRequest returned NIL
+    verb= SHOW
+    directObj= TITLE
+    prep= WITH
+    indirectObj= MOVIES
+    QualIndirectPrep= NIL
+    QualIndirectObj= RATING
+    Comparator= NIL
+    QualPrep= NIL
+    QualValue= OR
+NIL
+
+
+ ;;; see if doing extra credit, return if not
+ (if (NOT(EQL doingExtra 'EC2))
+    (abort))
+Break 11 [14]>

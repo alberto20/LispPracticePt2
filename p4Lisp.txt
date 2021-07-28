@@ -1,0 +1,134 @@
+;;; Author: Adalberto Ramirez
+
+;;; checkRequest
+;;; 	Parameters:
+;;;	parse - parse-obj request hastable passed in
+;;;	Purpose:
+;;;		returns a T value if the form is correctly checked for its partOfSpeech
+;;;		if partOfSpeech and the word position is true it will parse the word into
+;;;		the parse-object hashtable as the partOfSpeech as the key word
+(defun checkRequest (parse)
+	(PROG (preposition)
+
+		;;; 'verb check and input
+		(setf preposition (getToken parse))
+		(if (isa preposition 'verb)
+			(putp 'verb parse preposition)
+			(return NIL))
+
+		;;; 'article check and input
+		(setf preposition (getToken parse))
+		(if (isa preposition 'article)
+			(setf preposition (getToken parse)))
+
+		;;; 'noun check and input
+		(if (isa preposition 'noun)
+			(putp 'directObj parse preposition)
+			(return NIL))
+		
+		;;; 'prep check and input
+		(setf preposition (getToken parse))
+		(if (isa preposition 'prep)
+			(putp 'prep parse preposition)
+			(return NIL))
+
+		;;; 'article check and input
+		(setf preposition (getToken parse))
+		(if (isa preposition 'article)
+			(setf preposition (getToken parse)))
+		
+		;;; 'noun check and input
+		(if (isa preposition 'noun)
+			(putp 'indirectObj parse preposition)
+			(return NIL))
+
+		;;; return true if end of first form
+		(setf preposition (getToken parse))
+		(if (NULL preposition) (return T))
+		
+		(if (isa preposition 'prep)
+			(putp 'QualIndirectPrep parse preposition)
+			(return NIL))
+
+		;;; 'article check and input
+		(setf preposition (getToken parse))
+		(if (isa preposition 'article)
+			(setf preposition (getToken parse)))
+
+		;;; 'noun check and input
+		(if (isa preposition 'noun)
+			(putp 'QualIndirectObj parse preposition)
+			(return NIL))
+		
+		(setf preposition (getToken parse))
+  		(cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+                      ( (eql preposition 'not) (putp 'NotQual parse preposition))
+		      ( (not (isa preposition 'comparator)) (return NIL)))
+		
+		(setf preposition (getToken parse))
+		(print preposition)
+		(cond ( (isa preposition 'comparator) (putp 'comparator parse preposition))
+		      ( (NULL (getToken parse)) (putp 'QualValue parse preposition))
+                      ( (isa preposition 'prep) (putp 'QualPrep parse preposition)))
+
+		(setf preposition (getToken parse))
+		(print preposition)
+		(cond ( (isa preposition 'prep) (putp 'QualPrep parse preposition))
+                      ( (NULL (getToken parse)) (putp 'QualValue parse preposition))
+                      ( (not (isa preposition 'prep)) (NIL)))
+		
+		(setf preposition (getToken parse))
+		(if (NULL preposition) 
+			(return T) 
+			(print preposition))
+
+		(setf preposition (getToken parse))
+		(if (NULL preposition) 
+			(return T))
+
+	)
+
+)
+
+
+;;; resetPartsOfSpeech
+;;; 	Parameters:
+;;;	parse - parse - obj request hastable passed in
+;;;	partOfSpeechN - A list of partOfSpeeches passed through that is used to reset the
+;;;	value of that key in the parse-obj hashtable 
+;;;	Purpose:
+;;;		returns a T value if the form is correctly checked for its partOfSpeech
+;;;		if partOfSpeech and the word position is true it will parse the word into
+;;;		the parse-object hashtable as the partOfSpeech as the key word
+(defun resetPartsOfSpeech (parse &rest partOfSpeech)
+	(dolist (word partOfSpeech)
+		(putp word parse NIL)
+	)
+)
+
+
+;;; set_isa
+;;; 	Parameters:
+;;;	wordsN - a list of words used as the value for the word-dict hasttable
+;;;	partOfSpeech - partOfSpeeches passed through that is used to reset the
+;;;	value of that key in the parse-obj hashtable 
+;;;	Purpose:
+;;;		inserts the values of words passed through into a word-dict hashtable as
+;;;		the words being part of value for the partOfSpeech value
+(defmacro set_isa (partOfSpeech &rest words)
+	(dolist (word words)
+		(putp word word-dict partOfSpeech)
+	)
+)
+
+;;; set_isa
+;;; 	Parameters:
+;;;	word - word used to compare the value from the word-dict key
+;;;	partOfSpeech - partOfSpeeches that is used to search for the key
+;;;	Purpose:
+;;;		searchs the word-dict hast table that checks if the value matches the key
+;;; 		if true returns T otherwise returns NIL
+(defun isa (word partOfSpeech)
+	(setf words (getp word word-dict))
+	(if (eql words partOfSpeech) T NIL)
+)
